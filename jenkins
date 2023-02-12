@@ -1,0 +1,45 @@
+pipeline{
+
+	agent {label 'slave'}
+
+	environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
+
+	stages {
+
+        stage('gitclone'){
+
+            steps {
+                git branch: 'main', url: 'https://github.com/faheemabbas110/dockertest.git'
+            }
+        }
+
+		stage('Build') {
+            steps {
+				sh 'docker build -t fdockerhub/myapp_jenkins:${BUILD_NUMBER} .'
+			}
+		}
+
+		stage('Login') {
+
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push') {
+
+			steps {
+				sh 'docker push fdockerhub/myapp_jenkins:${BUILD_NUMBER}'
+			}
+		}
+	}
+
+	post {
+		always {
+			sh 'docker logout'
+		}
+	}
+
+}
