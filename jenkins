@@ -14,19 +14,27 @@ pipeline{
                 git branch: 'main', url: 'https://github.com/faheemabbas110/dockertest.git'
             }
         }
-
-		stage('Build') {
-            steps {
-				sh 'docker build -t fdockerhub/myapp_jenkinsx:${BUILD_NUMBER} .'
-			}
-		}
-
-		stage('RemoveImage') {
+        stage('RemoveImage') {
             steps {
 				sh 'docker rmi fdockerhub/myapp_jenkinsx -f'
 			}
 		}
 
+		stage('Build') {
+            steps {
+				sh 'docker build -t fdockerhub/myapp_jenkinsx:latest .'
+			}
+		}
+		stage('RemoveContainer') {
+            steps {
+				sh 'docker rm myapp -f'
+			}
+		}
+		stage('RunContainer') {
+            steps {
+				sh 'docker run -it -d -p 3000:3000/tcp --name myapp fdockerhub/myapp_jenkinsx'
+			}
+		}
 		stage('Login') {
 
 			steps {
@@ -37,7 +45,7 @@ pipeline{
 		stage('Push') {
 
 			steps {
-				sh 'docker push fdockerhub/myapp_jenkinsx:${BUILD_NUMBER}'
+				sh 'docker push fdockerhub/myapp_jenkinsx:latest'
 			}
 		}
 	}
@@ -49,5 +57,3 @@ pipeline{
 	}
 
 }
-
-//test
