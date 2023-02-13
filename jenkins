@@ -17,7 +17,13 @@ pipeline{
 
 		stage('Build') {
             steps {
-				sh 'docker build -t fdockerhub/myapp_jenkins:${BUILD_NUMBER} .'
+				sh 'docker build -t fdockerhub/myapp_jenkinsx:${BUILD_NUMBER} .'
+			}
+		}
+
+		stage('RemoveImage') {
+            steps {
+				sh 'docker rmi fdockerhub/myapp_jenkinsx -f'
 			}
 		}
 
@@ -31,7 +37,7 @@ pipeline{
 		stage('Push') {
 
 			steps {
-				sh 'docker push fdockerhub/myapp_jenkins:${BUILD_NUMBER}'
+				sh 'docker push fdockerhub/myapp_jenkinsx:${BUILD_NUMBER}'
 			}
 		}
 	}
@@ -44,4 +50,4 @@ pipeline{
 
 }
 
-# this is a test comment 
+//test
