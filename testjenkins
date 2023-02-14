@@ -1,0 +1,76 @@
+pipeline{
+
+	agent {label 'slave'}
+
+	environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
+
+	stages {
+
+        stage('gitclone'){
+
+            steps {
+                git branch: 'main', url: 'https://github.com/faheemabbas110/dockertest.git'
+            }
+        }
+        stage('RemoveContainer') {
+            steps {
+				sh 'docker rm myapp -f'
+			}
+        }
+		stage('RemoveImage') {
+            steps {
+                script { 
+                    def imageName = "fdockerhub/myapp01"
+                    env.imageName = "${imageName}"
+                    def oldImageID = sh( 
+                                            script: 'docker images -qf reference=\${imageName}:latest',
+                                            returnStdout: true
+                                        )
+
+                    echo "Image Name: " + "${imageName}"
+                    echo "Old Image: ${oldImageID}"
+
+                    if ( "${oldImageID}" != '' ) {
+                        echo "Deleting image id: ${oldImageID}..."
+                         sh "docker rmi -f ${oldImageID}"
+                    } else {
+                        echo "No image to delete..."
+                        } 
+                    }
+            }
+        }
+
+		stage('Build') {
+            steps {
+				sh 'docker build -t fdockerhub/myapp01:latest .'
+			}
+		}
+		stage('RunContainer') {
+            steps {
+				sh 'docker run -it -d -p 3000:3000/tcp --name myapp fdockerhub/myapp01'
+			}
+		}
+		stage('Login') {
+
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push') {
+
+			steps {
+				sh 'docker push fdockerhub/myapp01:latest'
+			}
+		} 
+	}
+
+	post {
+		always {
+			sh 'docker logout'
+		}
+	}
+
+}
